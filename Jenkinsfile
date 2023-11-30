@@ -4,11 +4,12 @@ pipeline{
     }
     tools {
         jdk "jdk17"
+        maven "current"
     }
     stages{
         stage("Build"){
             steps{
-                bat 'java -version'
+                bat 'mvn clean'
             }
         }
     }
