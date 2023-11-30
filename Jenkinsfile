@@ -1,32 +1,15 @@
 pipeline{
-    agent none
-    stages{
-        stage("A"){
-            steps{
-                echo "========executing A========"
-            }
-            post{
-                always{
-                    echo "========always========"
-                }
-                success{
-                    echo "========A executed successfully========"
-                }
-                failure{
-                    echo "========A execution failed========"
-                }
-            }
-        }
+    agent {
+        label built-in
     }
-    post{
-        always{
-            echo "========always========"
-        }
-        success{
-            echo "========pipeline executed successfully ========"
-        }
-        failure{
-            echo "========pipeline execution failed========"
+    tools {
+        jdk "jdk17"
+    }
+    stages{
+        stage("Build"){
+            steps{
+                sh 'java -version'
+            }
         }
     }
 }
