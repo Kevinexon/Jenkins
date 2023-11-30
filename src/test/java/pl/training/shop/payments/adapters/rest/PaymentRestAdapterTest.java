@@ -29,7 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static pl.training.shop.payments.PaymentFixtures.*;
 
+@ActiveProfile("dev")
 @WithMockUser(roles = "ADMIN")
+@SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
 @WebMvcTest(value = PaymentRestController.class)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
