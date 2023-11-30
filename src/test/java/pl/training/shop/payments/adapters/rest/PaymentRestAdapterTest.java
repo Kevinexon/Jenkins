@@ -1,81 +1,64 @@
-package pl.training.shop.payments.adapters.rest;
+package pl.training.shop.integration;
 
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import pl.training.shop.commons.data.validation.ValidationExceptionMapper;
-import pl.training.shop.commons.web.RestExceptionResponseBuilder;
-import pl.training.shop.payments.domain.Payment;
-import pl.training.shop.payments.ports.PaymentService;
+import org.springframework.transaction.annotation.Transactional;
+import pl.training.shop.Application;
+import pl.training.shop.payments.adapters.persistence.jpa.PaymentEntity;
+
+import java.util.Locale;
 
 import static org.hamcrest.core.Is.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.DEFINED_PORT;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static pl.training.shop.payments.PaymentFixtures.*;
 
-@ActiveProfile("dev")
+@ActiveProfiles("dev")
 @WithMockUser(roles = "ADMIN")
 @SpringBootTest(classes = Application.class, webEnvironment = RANDOM_PORT)
-@WebMvcTest(value = PaymentRestController.class)
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
-class PaymentRestAdapterTest {
+class PaymentRestAdapterIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-    @MockBean
-    private PaymentService paymentService;
-    @MockBean
-    private PaymentRestMapper mapper;
+    @Autowired
+    private EntityManager entityManager;
 
-    @TestConfiguration
-    static class TestConfig {
-
-        @Bean
-        public RestExceptionResponseBuilder responseBuilder(MessageSource messageSource) {
-            return new RestExceptionResponseBuilder(messageSource);
+    @Transactional
+    @Test
+    void given_payment_when_get_by_id_then_returns_payment() throws Exception {
+        var paymentEntity = createEntity(TEST_STATUS.name());
+        if (entityManager.find(PaymentEntity.class, paymentEntity.getId()) == null) {
+            entityManager.persist(paymentEntity);
+            entityManager.flush();
         }
-
-        @Bean
-        public ValidationExceptionMapper validationExceptionMapper() {
-            return Mappers.getMapper(ValidationExceptionMapper.class);
-        }
-
-       /* @Bean
-        public WebSecurityCustomizer webSecurityCustomizer() {
-            return web -> web.ignoring().anyRequest();
-        }*/
-
-    }
-
-    @BeforeEach
-    void beforeEach() {
-        when(paymentService.getById(TEST_ID)).thenReturn(TEST_PAYMENT);
-        when(mapper.toDto(any(Payment.class))).then(toDto);
+        mockMvc.perform(get("/api/payments/" + TEST_ID)
+                        .accept(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(TEST_ID)))
+                .andExpect(jsonPath("$.status", is(TEST_STATUS.name())))
+                .andExpect(jsonPath("$.value", is(TEST_MONEY_VALUE_WITH_FEE.toString())));
     }
 
     @Test
-    void given_payment_exists_when_get_by_id_then_returns_payment() throws Exception {
-        mockMvc.perform(get("/api/payments/" + TEST_ID).accept(APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(TEST_ID)))
-                .andExpect(jsonPath("$.value", is(TEST_PAYMENT.getValue().toString())));
+    void when_get_by_invalid_id_then_returns_not_found_status() throws Exception {
+        mockMvc.perform(get("/api/payments/1")
+                        .accept(APPLICATION_JSON)
+                        .locale(new Locale("pl", "PL")))
+                .andExpect(status().isNotFound());
     }
 
 }
