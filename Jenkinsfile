@@ -30,24 +30,24 @@ pipeline {
                         bat "mvn test"
                     }
                 }
-            }
-            excludes {
-                exclude {
-                    axis {
-                        name 'PLATFORM'
-                        values 'linux'
-                    }
-                    axis {
-                        name 'JAVA_VERSION'
-                        values 'jdk11'
-                    }
-                    axis {
-                        name 'PLATFORM'
-                        values 'windows'
-                    }
-                    axis {
-                        name 'JAVA_VERSION'
-                        values 'jdk11'
+                excludes {
+                    exclude {
+                        axis {
+                            name 'PLATFORM'
+                            values 'linux'
+                        }
+                        axis {
+                            name 'JAVA_VERSION'
+                            values 'jdk11'
+                        }
+                        axis {
+                            name 'PLATFORM'
+                            values 'windows'
+                        }
+                        axis {
+                            name 'JAVA_VERSION'
+                            values 'jdk11'
+                        }
                     }
                 }
             }
