@@ -22,18 +22,13 @@ pipeline {
                 stages {
                     stage("Build") {
                         steps {
-                            script {
-                                echo "Do Build for ${PLATFORM} - ${JAVA_VERSION}"
-                                bat "mvn clean compile package"
-                            }
+                            bat "mvn clean compile package"
+                            echo "Do Build for ${PLATFORM} - ${JAVA_VERSION}"
                         }
                     }
                     stage("Test") {
                         steps {
-                            script {
-                                echo "Do Test for ${PLATFORM} - ${JAVA_VERSION}"
-                                bat "mvn test"
-                            }
+                            bat "mvn test"
                         }
                     }
                 }
