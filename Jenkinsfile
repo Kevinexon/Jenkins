@@ -7,8 +7,8 @@ pipeline {
         maven "current"
     }
     stages {
-        stages("Build & Test"){
-            matrix{
+        stage("Build & Test") {
+            matrix {
                 axes {
                     axis {
                         name 'PLATFORM'
@@ -19,15 +19,22 @@ pipeline {
                         values 'jdk17', 'jdk11', 'jdk21'
                     }
                 }
-                stage("Build") {
-                    steps {
-                        bat "mvn clean compile package"
-                        echo "Do Build for ${PLATFORM} - ${JAVA_VERSION}"
+                stages {
+                    stage("Build") {
+                        steps {
+                            script {
+                                echo "Do Build for ${PLATFORM} - ${JAVA_VERSION}"
+                                bat "mvn clean compile package"
+                            }
+                        }
                     }
-                }
-                stage("Test") {
-                    steps {
-                        bat "mvn test"
+                    stage("Test") {
+                        steps {
+                            script {
+                                echo "Do Test for ${PLATFORM} - ${JAVA_VERSION}"
+                                bat "mvn test"
+                            }
+                        }
                     }
                 }
                 excludes {
@@ -40,6 +47,8 @@ pipeline {
                             name 'JAVA_VERSION'
                             values 'jdk11'
                         }
+                    }
+                    exclude {
                         axis {
                             name 'PLATFORM'
                             values 'windows'
